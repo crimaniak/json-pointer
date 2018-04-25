@@ -1,0 +1,8 @@
+language: d
+
+d:
+  - dmd
+  - gdc
+  - ldc
+
+sudo: false
