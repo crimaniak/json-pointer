@@ -8,6 +8,10 @@ struct JsonPointer
 
     string[] path;
 
+   	/** 
+   	 * Constructor. 
+   	 * @throws Exception if error in path
+   	 */
     @safe this(string path)
     {
         import std.algorithm : splitter, substitute, map;
@@ -22,11 +26,13 @@ struct JsonPointer
                 .replace("~0", "~").to!string).drop(1).array;
     }
 
+	// encode path component, quoting '~' and '/' symbols according to rfc6901
     @safe static encodeComponent(string component) pure
     {
         return component.replace("~", "~0").replace("/", "~1");
     }
 
+	// find element in given document according to path
     Nullable!JSONValue evaluate(JSONValue root)
     {
         import std.conv : to, ConvException;
