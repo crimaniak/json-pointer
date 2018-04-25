@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/crimaniak/json-pointer.svg)](https://travis-ci.org/crimaniak/json-pointer)
+
 # JavaScript Object Notation (JSON) Pointer
 
 This is implementation of [rfc6901](https://tools.ietf.org/html/rfc6901).
