@@ -2,7 +2,7 @@ module vision.json.pointer;
 
 struct JsonPointer
 {
-    import std.typecons : Nullable, nullable;
+    import std.typecons : Nullable;
     import std.string : replace;
     import std.json;
 
@@ -14,7 +14,7 @@ struct JsonPointer
    	 */
     @safe this(string path)
     {
-        import std.algorithm : splitter, substitute, map;
+        import std.algorithm : splitter, map;
         import std.range : drop;
         import std.array : array;
         import std.conv : to;
@@ -67,7 +67,7 @@ struct JsonPointer
                 return Nullable!JSONValue();
             }
         }
-        return nullable(cursor);
+        return Nullable!JSONValue(cursor);
     }
 }
 
