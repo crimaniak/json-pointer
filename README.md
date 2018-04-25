@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/crimaniak/json-pointer.svg)](https://travis-ci.org/crimaniak/json-pointer)
+[![codecov](https://codecov.io/gh/crimaniak/json-pointer/branch/master/graph/badge.svg)](https://codecov.io/gh/crimaniak/json-pointer)
+[![license](https://img.shields.io/github/license/crimaniak/json-pointer.svg)](https://github.com/crimaniak/json-pointer/blob/master/LICENSE)
 
 # JavaScript Object Notation (JSON) Pointer
 
