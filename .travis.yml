@@ -5,6 +5,9 @@ d:
   - gdc
   - ldc
 
+script:
+  - dub test -b unittest-cov
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 
