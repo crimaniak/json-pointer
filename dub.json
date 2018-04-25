@@ -1,0 +1,16 @@
+{
+	"name" : "json-pointer",
+	"description" : "IETF RFC 6901 implementation: JavaScript Object Notation (JSON) Pointer",
+	"authors": [
+    	"Alexey Kulentsov"
+    ],
+    "license": "MIT",
+	"configurations": [
+		{
+			"name": "default",
+			"targetType": "library"
+		}
+  	],
+	"dependencies" : {
+	}
+}
