@@ -2,6 +2,7 @@ module vision.json.pointer;
 
 struct JsonPointer
 {
+    import std.conv : to;
     import std.typecons : Nullable;
     import std.string : replace;
     import std.json;
@@ -17,7 +18,6 @@ struct JsonPointer
         import std.algorithm : splitter, map;
         import std.range : drop;
         import std.array : array;
-        import std.conv : to;
 
         if (path.length > 0 && path[0] != '/')
             throw new Exception("Incorrect syntax of JsonPointer: " ~ path);
@@ -69,6 +69,14 @@ struct JsonPointer
         }
         return Nullable!JSONValue(cursor);
     }
+    
+    string toString() const
+    {
+    	import std.algorithm: map, joiner;
+    	import std.range: chain;
+    	return path.map!(part => chain("/"c, encodeComponent(part))).joiner("").to!string;
+    }
+
 }
 
 unittest
@@ -92,6 +100,10 @@ unittest
     assert(JsonPointer("/a~0a/b~1b/c~01c/d~10d").path == ["a~a", "b/b", "c~1c", "d/0d"]);
     assert(JsonPointer("/Киррилица, Ё, ЯФЫЖЭЗЮЙ/إنه نحن العرب")
             .path == ["Киррилица, Ё, ЯФЫЖЭЗЮЙ", "إنه نحن العرب"]);
+
+	// toString tests
+	foreach(p; ["/a/b/c", "/a~0a/b~1b/c~01c/d~10d"])
+		assert(JsonPointer(p).toString == p);
 
     // test encodeComponent
     assert(JsonPointer.encodeComponent("a/b~c") == "a~1b~0c");
