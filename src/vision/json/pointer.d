@@ -3,7 +3,7 @@ module vision.json.pointer;
 struct JsonPointer
 {
     import std.conv : to;
-    import std.typecons : Nullable;
+    import std.typecons : Nullable, nullable;
     import std.string : replace;
     import std.json;
 
@@ -13,7 +13,7 @@ struct JsonPointer
    	 * Constructor. 
    	 * @throws Exception if error in path
    	 */
-    @safe this(string path)
+    @safe this(const string path)
     {
         import std.algorithm : splitter, map;
         import std.range : drop;
@@ -26,51 +26,78 @@ struct JsonPointer
                 .replace("~0", "~").to!string).drop(1).array;
     }
 
+	@safe this(const string[] path)
+	{
+		this.path = path.dup;
+	}
+
 	// encode path component, quoting '~' and '/' symbols according to rfc6901
     @safe static encodeComponent(string component) pure
     {
         return component.replace("~", "~0").replace("/", "~1");
     }
 
+    Nullable!(JSONValue*) evaluate(ref JSONValue root) const
+    {
+    	return evaluate(&root);
+    }
+
 	// find element in given document according to path
-    Nullable!JSONValue evaluate(JSONValue root)
+    Nullable!(JSONValue*) evaluate(JSONValue* root) const
     {
         import std.conv : to, ConvException;
         import std.string : startsWith;
         import std.stdio;
 
-        JSONValue cursor = root;
-
+        auto cursor = root;
+        
         foreach (component; path)
         {
             with (JSON_TYPE) switch (cursor.type)
             {
             case OBJECT:
-                if (component !in cursor)
-                    return Nullable!JSONValue();
-                cursor = cursor[component];
-                break;
+                if (component !in *cursor)
+	                break;
+                cursor = &((*cursor)[component]);
+                continue;
             case ARRAY:
                 try
                 {
                     int index = component.to!int;
                     if (index < 0 || index >= cursor.array.length || component.startsWith("0"))
-                        return Nullable!JSONValue();
-                    cursor = cursor.array[index];
+	                    break;
+                    cursor = &(cursor.array[index]);
+                    continue;
                 }
                 catch (ConvException e)
                 {
-                    return Nullable!JSONValue();
+                	break;
                 }
-                break;
             default:
-                return Nullable!JSONValue();
+                break;
             }
+            return Nullable!(JSONValue*)();
         }
-        return Nullable!JSONValue(cursor);
+        return nullable(cursor);
     }
-    
-    string toString() const
+
+	@property bool isRoot() const @safe
+	{
+		return path.length == 0;
+	}
+
+	@property Nullable!JsonPointer parent() const @safe
+	{
+		
+		return isRoot ? Nullable!JsonPointer() : nullable(JsonPointer(path[0..$-1]));
+	}
+	
+	@property string lastComponent() const @safe
+	{
+		return path[$-1];
+	} 
+
+    string toString() const @safe
     {
     	import std.algorithm: map, joiner;
     	import std.range: chain;
@@ -100,6 +127,15 @@ unittest
     assert(JsonPointer("/a~0a/b~1b/c~01c/d~10d").path == ["a~a", "b/b", "c~1c", "d/0d"]);
     assert(JsonPointer("/Киррилица, Ё, ЯФЫЖЭЗЮЙ/إنه نحن العرب")
             .path == ["Киррилица, Ё, ЯФЫЖЭЗЮЙ", "إنه نحن العرب"]);
+
+    assert(JsonPointer("/a/b/c").parent.path == ["a", "b"]);
+    assert(JsonPointer("/a/b/c").lastComponent == "c");
+
+	// isRoot()
+    assert(JsonPointer("").isRoot);
+    assert(!JsonPointer("/").isRoot);
+    assert(JsonPointer("").parent.isNull);
+    assert(JsonPointer("/").parent.isRoot);
 
 	// toString tests
 	foreach(p; ["/a/b/c", "/a~0a/b~1b/c~01c/d~10d"])
