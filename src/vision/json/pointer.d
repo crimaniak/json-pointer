@@ -3,13 +3,13 @@ module vision.json.pointer;
 struct JsonPointer
 {
     import std.conv : to;
-    import std.typecons : Nullable, nullable;
+    import std.typecons : Nullable;
     import std.string : replace;
     import std.json;
 
     string[] path;
 
-   	/** 
+    /** 
    	 * Constructor. 
    	 * @throws Exception if error in path
    	 */
@@ -26,12 +26,12 @@ struct JsonPointer
                 .replace("~0", "~").to!string).drop(1).array;
     }
 
-	@safe this(const string[] path)
-	{
-		this.path = path.dup;
-	}
+    @safe this(const string[] path)
+    {
+        this.path = path.dup;
+    }
 
-	// encode path component, quoting '~' and '/' symbols according to rfc6901
+    // encode path component, quoting '~' and '/' symbols according to rfc6901
     @safe static encodeComponent(string component) pure
     {
         return component.replace("~", "~0").replace("/", "~1");
@@ -39,10 +39,10 @@ struct JsonPointer
 
     Nullable!(JSONValue*) evaluate(ref JSONValue root) const
     {
-    	return evaluate(&root);
+        return evaluate(&root);
     }
 
-	// find element in given document according to path
+    // find element in given document according to path
     Nullable!(JSONValue*) evaluate(JSONValue* root) const
     {
         import std.conv : to, ConvException;
@@ -50,14 +50,14 @@ struct JsonPointer
         import std.stdio;
 
         auto cursor = root;
-        
+
         foreach (component; path)
         {
             with (JSON_TYPE) switch (cursor.type)
             {
             case OBJECT:
                 if (component !in *cursor)
-	                break;
+                    break;
                 cursor = &((*cursor)[component]);
                 continue;
             case ARRAY:
@@ -65,43 +65,43 @@ struct JsonPointer
                 {
                     int index = component.to!int;
                     if (index < 0 || index >= cursor.array.length || component.startsWith("0"))
-	                    break;
+                        break;
                     cursor = &(cursor.array[index]);
                     continue;
                 }
                 catch (ConvException e)
                 {
-                	break;
+                    break;
                 }
             default:
                 break;
             }
             return Nullable!(JSONValue*)();
         }
-        return nullable(cursor);
+        return Nullable!(JSONValue*)(cursor);
     }
 
-	@property bool isRoot() const @safe
-	{
-		return path.length == 0;
-	}
+    @property bool isRoot() const @safe
+    {
+        return path.length == 0;
+    }
 
-	@property Nullable!JsonPointer parent() const @safe
-	{
-		
-		return isRoot ? Nullable!JsonPointer() : nullable(JsonPointer(path[0..$-1]));
-	}
-	
-	@property string lastComponent() const @safe
-	{
-		return path[$-1];
-	} 
+    @property Nullable!JsonPointer parent() const @safe
+    {
+        return isRoot ? Nullable!JsonPointer() : Nullable!JsonPointer(JsonPointer(path[0 .. $ - 1]));
+    }
+
+    @property string lastComponent() const @safe
+    {
+        return path[$ - 1];
+    }
 
     string toString() const @safe
     {
-    	import std.algorithm: map, joiner;
-    	import std.range: chain;
-    	return path.map!(part => chain("/"c, encodeComponent(part))).joiner("").to!string;
+        import std.algorithm : map, joiner;
+        import std.range : chain;
+
+        return path.map!(part => chain("/"c, encodeComponent(part))).joiner("").to!string;
     }
 
 }
@@ -131,15 +131,15 @@ unittest
     assert(JsonPointer("/a/b/c").parent.path == ["a", "b"]);
     assert(JsonPointer("/a/b/c").lastComponent == "c");
 
-	// isRoot()
+    // isRoot()
     assert(JsonPointer("").isRoot);
     assert(!JsonPointer("/").isRoot);
     assert(JsonPointer("").parent.isNull);
     assert(JsonPointer("/").parent.isRoot);
 
-	// toString tests
-	foreach(p; ["/a/b/c", "/a~0a/b~1b/c~01c/d~10d"])
-		assert(JsonPointer(p).toString == p);
+    // toString tests
+    foreach (p; ["/a/b/c", "/a~0a/b~1b/c~01c/d~10d"])
+        assert(JsonPointer(p).toString == p);
 
     // test encodeComponent
     assert(JsonPointer.encodeComponent("a/b~c") == "a~1b~0c");
