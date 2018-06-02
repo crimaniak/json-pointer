@@ -64,7 +64,7 @@ struct JsonPointer
                 try
                 {
                     int index = component.to!int;
-                    if (index < 0 || index >= cursor.array.length || component.startsWith("0"))
+                    if (index < 0 || index >= cursor.array.length || (component.startsWith("0") && component.length>1))
                         break;
                     cursor = &(cursor.array[index]);
                     continue;
@@ -160,4 +160,10 @@ unittest
     assert(JsonPointer("/a/20").evaluate(j).isNull);
     assert(JsonPointer("/a/p3").evaluate(j).isNull);
     assert(JsonPointer("/rating/0").evaluate(j).isNull);
+    
+    // fix #6
+    JSONValue arr = parseJSON("[1,2,3,4,5]");
+    assert(!JsonPointer("/0").evaluate(arr).isNull);
+    
 }
+
