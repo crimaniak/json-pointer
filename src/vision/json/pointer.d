@@ -10,7 +10,7 @@ struct JsonPointer
     string[] path;
 
     /** 
-   	 * Constructor. 
+   	 * Constructor from string
    	 * @throws Exception if error in path
    	 */
     @safe this(const string path)
@@ -26,23 +26,28 @@ struct JsonPointer
                 .replace("~0", "~").to!string).drop(1).array;
     }
 
+    /** 
+   	 * Constructor from array of components 
+   	 * @throws Exception if error in path
+   	 */
     @safe this(const string[] path)
     {
         this.path = path.dup;
     }
 
-    // encode path component, quoting '~' and '/' symbols according to rfc6901
+    /// encode path component, quoting '~' and '/' symbols according to rfc6901
     @safe static encodeComponent(string component) pure
     {
         return component.replace("~", "~0").replace("/", "~1");
     }
 
+    /// find element in given document according to path
     Nullable!(JSONValue*) evaluate(ref JSONValue root) const
     {
         return evaluate(&root);
     }
 
-    // find element in given document according to path
+    /// find element in given document according to path
     Nullable!(JSONValue*) evaluate(JSONValue* root) const
     {
         import std.conv : to, ConvException;
@@ -81,21 +86,25 @@ struct JsonPointer
         return Nullable!(JSONValue*)(cursor);
     }
 
+	/// Return true for empty path
     @property bool isRoot() const @safe
     {
         return path.length == 0;
     }
 
+	/// Get path for parent element
     @property Nullable!JsonPointer parent() const @safe
     {
         return isRoot ? Nullable!JsonPointer() : Nullable!JsonPointer(JsonPointer(path[0 .. $ - 1]));
     }
 
+	/// Get last component of path
     @property string lastComponent() const @safe
     {
         return path[$ - 1];
     }
 
+	/// Convert path to string
     string toString() const @safe
     {
         import std.algorithm : map, joiner;
